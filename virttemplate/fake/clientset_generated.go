@@ -31,14 +31,16 @@ import (
 	clientset "kubevirt.io/virt-template-client-go/virttemplate"
 	templatev1alpha1 "kubevirt.io/virt-template-client-go/virttemplate/typed/core/v1alpha1"
 	faketemplatev1alpha1 "kubevirt.io/virt-template-client-go/virttemplate/typed/core/v1alpha1/fake"
-	templatev1beta1 "kubevirt.io/virt-template-client-go/virttemplate/typed/core/v1beta1"
-	faketemplatev1beta1 "kubevirt.io/virt-template-client-go/virttemplate/typed/core/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
 // It's backed by a very simple object tracker that processes creates, updates and deletions as-is,
 // without applying any field management, validations and/or defaults. It shouldn't be considered a replacement
 // for a real clientset and is mostly useful in simple unit tests.
+//
+// DEPRECATED: NewClientset replaces this with support for field management, which significantly improves
+// server side apply testing. NewClientset is only available when apply configurations are generated (e.g.
+// via --with-applyconfig).
 func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 	o := testing.NewObjectTracker(scheme, codecs.UniversalDecoder())
 	for _, obj := range objects {
@@ -52,8 +54,8 @@ func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 	cs.AddReactor("*", "*", testing.ObjectReaction(o))
 	cs.AddWatchReactor("*", func(action testing.Action) (handled bool, ret watch.Interface, err error) {
 		var opts metav1.ListOptions
-		if watchAction, ok := action.(testing.WatchActionImpl); ok {
-			opts = watchAction.ListOptions
+		if watchActcion, ok := action.(testing.WatchActionImpl); ok {
+			opts = watchActcion.ListOptions
 		}
 		gvr := action.GetResource()
 		ns := action.GetNamespace()
@@ -84,17 +86,6 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-// IsWatchListSemanticsUnSupported informs the reflector that this client
-// doesn't support WatchList semantics.
-//
-// This is a synthetic method whose sole purpose is to satisfy the optional
-// interface check performed by the reflector.
-// Returning true signals that WatchList can NOT be used.
-// No additional logic is implemented here.
-func (c *Clientset) IsWatchListSemanticsUnSupported() bool {
-	return true
-}
-
 var (
 	_ clientset.Interface = &Clientset{}
 	_ testing.FakeClient  = &Clientset{}
@@ -103,9 +94,4 @@ var (
 // TemplateV1alpha1 retrieves the TemplateV1alpha1Client
 func (c *Clientset) TemplateV1alpha1() templatev1alpha1.TemplateV1alpha1Interface {
 	return &faketemplatev1alpha1.FakeTemplateV1alpha1{Fake: &c.Fake}
-}
-
-// TemplateV1beta1 retrieves the TemplateV1beta1Client
-func (c *Clientset) TemplateV1beta1() templatev1beta1.TemplateV1beta1Interface {
-	return &faketemplatev1beta1.FakeTemplateV1beta1{Fake: &c.Fake}
 }
