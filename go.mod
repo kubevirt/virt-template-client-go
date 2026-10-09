@@ -8,7 +8,7 @@ require (
 	k8s.io/client-go v0.36.4
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
 	kubevirt.io/api v1.10.0-alpha.0
-	kubevirt.io/virt-template-api v0.0.0-20261008010240-e9b1a58c5ade
+	kubevirt.io/virt-template-api v0.0.0-20261009010241-8f3bb83aea7a
 )
 
 require (
